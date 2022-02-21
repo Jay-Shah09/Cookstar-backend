@@ -62,6 +62,8 @@ const updateProfile = (req,res) => {
         }
         else{
             updatee(req,res);
+            updateLike(req,res);
+            //updateBookmark(req,res);
         }
     });
 }
@@ -80,8 +82,33 @@ const updatee = async(req,res) => {
     console.log(recipeData);
     res.send(userData);
 }
-    
-
+  
+const updateBookmark = async(req,res) => {
+    await models.updateMany({bookmark:req.body.old_email},
+        {
+            $push:{bookmark:req.body.email}
+        },
+        {
+            new:true
+        }).exec((err,result)=>{
+            if(err){return res.status(422).json({error:err})}
+            else{return res.json(result)}
+        }
+    )
+}
+const updateLike = async(req,res) => {
+    await models.updateMany({like:req.body.old_email,like:req.body.old_email},
+        {
+            $set:{"like.$":req.body.email}
+        },
+        {
+            new:true
+        }).exec((err,result)=>{
+            if(err){return res.status(422).json({error:err})}
+            else{return res.json(result)}
+        }
+    )
+}
 
 const registerUser = (req,res) => {  
     //if((req.body.username).length>7){return res.status(403).send('Username Should be less than 7')}

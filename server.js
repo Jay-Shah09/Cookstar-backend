@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express=require('express');
 const cors=require('cors');
+const cloudinary=require('cloudinary');
 const multer=require('multer');
 const path=require('path');
 
@@ -12,34 +13,44 @@ const {verifyToken} = require('./authorization/auth');
 
 const app = express();
 
-const storage = multer.diskStorage({
-    destination:(req,file,cb)=>{
-        cb(null,'../frontend/public')
-    },
-    filename:(req,file,cb)=>{
-        cb(null, file.fieldname + '_' + Date.now() + path.extname(file.originalname))
-    }
-});
-
 app.use(cors());
 
 app.use(express.json());
 
 // app.use(verifyToken);
 
-const upload = multer({storage:storage,limits:{fieldSize:10*1024*1024}});
+cloudinary.config({ 
+    cloud_name:process.env.CLOUD_NAME ,
+    api_key:process.env.API_KEY , 
+    api_secret: process.env.API_SECRET 
+});
+
+const storage = multer.diskStorage({});
+const upload=multer({storage:storage,limits:{fieldSize:10*1024*1024},fileFilter:(req,file,cb)=>{
+    let ext=path.extname(file.originalname);
+    console.log('====================================');
+    console.log(ext);
+    console.log('====================================');
+    if(ext!=='.jpg' && ext!=='.png' && ext!=='.jpeg')
+    {
+        cb(new Error('File Type Not Supported'),false);
+        return;
+    }
+    cb(null,true);
+}});
+// const upload = multer({storage:storage,limits:{fieldSize:10*1024*1024}});
 
 app.get('/', function(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.send("welcome Home");
 });
 
-app.post('/recipeData',[verifyToken,upload.single('imager')],function(req, res) {
+app.post('/recipeData',[verifyToken,upload.single('imager')],async function(req, res) {
     // console.log(req.file);
     // console.log(req.body);
     // console.log(req);
     console.log(req.headers['authorization']);
-    
+    const result= await cloudinary.uploader.upload(req.file.path);
     const formdatas=req.body;
 
     const doc=new recipes({
@@ -52,17 +63,17 @@ app.post('/recipeData',[verifyToken,upload.single('imager')],function(req, res) 
         steps:formdatas.steps,
         username:req.auth.username,
         _id:Math.random()*5,
-        image:req.file.filename,
+        image:result.secure_url,
         email:formdatas.email,
         temp_id:formdatas.temp_id
     });
     doc.save(function(err,result){
         if (err){
             console.log(err);
-            res.status(200).send('success');
         }
         else{
             console.log(result)
+            res.status(200).send('success');
         }
     });
 });
@@ -99,10 +110,6 @@ app.post('/getUser',(req,res) => {
         }
     });
 });
-
-// app.get('/getSaved',(req,res)=>{
-//     res.send();
-// })
 
 app.put('/recipeData/like',verifyToken,function(req,res){
     recipes.findByIdAndUpdate(req.body.id,
