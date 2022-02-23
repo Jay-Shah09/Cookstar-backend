@@ -47,7 +47,7 @@ const showSingleRecipe = (req, res) => {
             res.send(err);
         }
         else{ 
-            res.setHeader('Access-Control-Allow-Origin', '*');
+            //res.setHeader('Access-Control-Allow-Origin', '*');
             console.log(result);
             res.send(result);
         }
@@ -62,52 +62,68 @@ const updateProfile = (req,res) => {
         }
         else{
             updatee(req,res);
-            updateLike(req,res);
-            //updateBookmark(req,res);
+            //updateLike(req,res);
+            updateBookmark(req,res);
         }
     });
 }
 
 const updatee = async(req,res) => {
-    const userData = await authModel.findOneAndUpdate({_id:req.body.id},req.body,{
-        new:true,
-        runValidators:true
-    });
-
-    const recipeData = await models.updateMany({email:req.body.old_email},req.body,{
-        new:true,
-        runValidators:true
-    });
+    try{
+        const userData = await authModel.findOneAndUpdate({_id:req.body.id},req.body,{
+            new:true,
+            runValidators:true
+        });
+        const recipeData = await models.updateMany({email:req.body.old_email},req.body,{
+            new:true,
+            runValidators:true
+        });
+        // res.send(userData);
+        console.log(recipeData);
+    }
+    catch(e){
+        console.log(e);
+    }
+    
     //console.log(userData);
-    console.log(recipeData);
-    res.send(userData);
 }
   
 const updateBookmark = async(req,res) => {
-    await models.updateMany({bookmark:req.body.old_email},
-        {
-            $push:{bookmark:req.body.email}
-        },
-        {
-            new:true
-        }).exec((err,result)=>{
-            if(err){return res.status(422).json({error:err})}
-            else{return res.json(result)}
-        }
-    )
+    try{
+        await models.updateMany({bookmark:req.body.old_email},
+            {
+                $push:{bookmark:req.body.email}
+            },
+            {
+                new:true
+            }).exec((err,result)=>{
+                if(err){return res.status(422).json({error:err})}
+                else{return res.json(result)}
+            }
+        )
+    }
+    catch(e){
+        console.log(e);
+    }
 }
 const updateLike = async(req,res) => {
-    await models.updateMany({like:req.body.old_email,like:req.body.old_email},
-        {
-            $set:{"like.$":req.body.email}
-        },
-        {
-            new:true
-        }).exec((err,result)=>{
-            if(err){return res.status(422).json({error:err})}
-            else{return res.json(result)}
-        }
-    )
+    try{
+
+        await models.updateMany({like:req.body.old_email,like:req.body.old_email},
+            {
+                $set:{"like.$":req.body.email}
+            },
+            {
+                new:true
+            }).exec((err,result)=>{
+                if(err){return res.status(422).json({error:err})}
+                else{return res.json(result)}
+            }
+        )
+    }
+    catch(e){
+        console.log(e);
+    }
 }
 
 const registerUser = (req,res) => {  

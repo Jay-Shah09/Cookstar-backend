@@ -41,7 +41,7 @@ const upload=multer({storage:storage,limits:{fieldSize:10*1024*1024},fileFilter:
 // const upload = multer({storage:storage,limits:{fieldSize:10*1024*1024}});
 
 app.get('/', function(req, res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    //res.setHeader('Access-Control-Allow-Origin', '*');
     res.send("welcome Home");
 });
 
@@ -94,7 +94,7 @@ app.get('/info',(req,res)=>{
         res.send(err);
      }
      else{ 
-        res.setHeader('Access-Control-Allow-Origin', '*');
+        //res.setHeader('Access-Control-Allow-Origin', '*');
         res.send(result);
      }
  });
